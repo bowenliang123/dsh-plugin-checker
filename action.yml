@@ -1,4 +1,4 @@
-name: 'DSH Plugin Checker'
+name: 'DeepSeek Harness Plugin Checker'
 description: 'GitHub Action for checking the correctness of DeepSeek Harness (dsh) plugin.'
 author: 'bowenliang123'
 branding:
