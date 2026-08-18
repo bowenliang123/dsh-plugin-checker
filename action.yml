@@ -52,7 +52,13 @@ runs:
       run: |
         set -euo pipefail
 
-        "$RUNNER_TEMP/dsh-cli/node_modules/.bin/dsh" plugin --profile "${{ inputs.profile }}" add "${{ inputs.rootPath }}"
+        ROOT_PATH="${{ inputs.rootPath }}"
+        case "$ROOT_PATH" in
+          /*) ;;
+          *) ROOT_PATH="${GITHUB_WORKSPACE:-$PWD}/$ROOT_PATH" ;;
+        esac
+
+        "$RUNNER_TEMP/dsh-cli/node_modules/.bin/dsh" plugin --profile "${{ inputs.profile }}" add "$ROOT_PATH"
 
         PLUGIN_NAME="$(node -p 'require(process.argv[1]).name' "$ROOT_PATH/package.json")"
         echo "pluginName=$PLUGIN_NAME" >> "$GITHUB_OUTPUT"

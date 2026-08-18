@@ -79,7 +79,7 @@ A plugin `package.json` looks like:
 ## Examples
 
 - `examples/hello-plugin` — a minimal valid plugin that passes the check.
-- `examples/broken-plugin` — a directory without a `package.json` that must fail the check.
+- `examples/broken-plugin` — a plugin with an invalid `package.json` that must fail the check.
 
 ## License
 

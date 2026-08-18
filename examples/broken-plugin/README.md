@@ -1,4 +1,5 @@
 # broken-plugin
 
-A directory without a `package.json` — not an npm package, and therefore not
-a valid dsh plugin. The DSH Plugin Checker action must reject it.
+A directory with an invalid (malformed) `package.json` — not a valid npm
+package, and therefore not a valid dsh plugin. The DSH Plugin Checker action
+must reject it.
