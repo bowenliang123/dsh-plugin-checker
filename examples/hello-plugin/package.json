@@ -1,0 +1,12 @@
+{
+  "name": "dsh-plugin-checker-hello",
+  "version": "0.1.0",
+  "description": "Minimal example DeepSeek Harness plugin used to exercise the DSH Plugin Checker action",
+  "type": "module",
+  "main": "index.js",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

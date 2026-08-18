@@ -1,0 +1,7 @@
+# Minimal patch: insert this plugin as one row over the profile root.
+
+- insert:
+    - id: hello
+      name: dsh-plugin-checker-hello
+      config:
+        greeting: hello
