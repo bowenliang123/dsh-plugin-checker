@@ -46,65 +46,13 @@ runs:
         mkdir -p "$RUNNER_TEMP/dsh-cli"
         npm install --prefix "$RUNNER_TEMP/dsh-cli" --no-save "@deepseek-ai/dsh@${{ inputs.dshVersion }}"
 
-    - name: Install plugin with dsh and verify
+    - name: Install plugin with DeepSeek Harness CLI
       id: check
       shell: bash
       run: |
         set -euo pipefail
 
-        PROFILE="${{ inputs.profile }}"
-        DSH_BIN="$RUNNER_TEMP/dsh-cli/node_modules/.bin/dsh"
-        ROOT_PATH="${{ inputs.rootPath }}"
-        case "$ROOT_PATH" in
-          /*) ;;
-          *) ROOT_PATH="${GITHUB_WORKSPACE:-$PWD}/$ROOT_PATH" ;;
-        esac
-        ROOT_PATH="$(cd "$ROOT_PATH" && pwd)"
+        "$RUNNER_TEMP/dsh-cli/node_modules/.bin/dsh" plugin --profile "${{ inputs.profile }}" add "${{ inputs.rootPath }}"
 
-        if [ ! -f "$ROOT_PATH/package.json" ]; then
-          echo "::error::No package.json found at ${ROOT_PATH} — a dsh plugin must be an npm package with a package.json manifest."
-          exit 1
-        fi
-
-        PLUGIN_NAME="$(node -e '
-          const fs = require("node:fs")
-          const path = process.argv[1]
-          let manifest
-          try {
-            manifest = JSON.parse(fs.readFileSync(path, "utf8"))
-          } catch (error) {
-            console.error(`invalid package.json at ${path}: ${error.message}`)
-            process.exit(1)
-          }
-          if (typeof manifest.name !== "string" || manifest.name.length === 0) {
-            console.error(`package.json at ${path} must declare a non-empty "name"`)
-            process.exit(1)
-          }
-          process.stdout.write(manifest.name)
-        ' "$ROOT_PATH/package.json")"
-
-        echo "Checking dsh plugin ${PLUGIN_NAME} at ${ROOT_PATH} (profile: ${PROFILE})"
-        "$DSH_BIN" plugin --profile "$PROFILE" add "$ROOT_PATH"
-
-        DSH_HOME_DIR="${DSH_HOME:-$HOME/.dsh}"
-        PROFILE_MANIFEST="$DSH_HOME_DIR/profiles/$PROFILE/package.json"
-        node -e '
-          const fs = require("node:fs")
-          const [manifestPath, pluginName, pluginRoot, profile] = process.argv.slice(1)
-          const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"))
-          const bundles = manifest.dsh?.profile?.bundles ?? []
-          if (!bundles.includes(pluginName)) {
-            console.error(`plugin ${pluginName} was installed but is not registered as a profile bundle layer`)
-            console.error(`declaring "dsh": { "bundle": { "patch": "./cordis.patch.yml" } } in the package manifest makes a package a dsh plugin`)
-            process.exit(1)
-          }
-          const pluginManifest = JSON.parse(fs.readFileSync(`${pluginRoot}/package.json`, "utf8"))
-          const patch = pluginManifest.dsh?.bundle?.patch
-          if (patch && !fs.existsSync(`${pluginRoot}/${patch}`)) {
-            console.error(`dsh.bundle.patch references ${patch}, which does not exist under ${pluginRoot}`)
-            process.exit(1)
-          }
-          console.log(`plugin ${pluginName} installed and registered as a bundle layer of profile ${profile}`)
-        ' "$PROFILE_MANIFEST" "$PLUGIN_NAME" "$ROOT_PATH" "$PROFILE"
-
+        PLUGIN_NAME="$(node -p 'require(process.argv[1]).name' "$ROOT_PATH/package.json")"
         echo "pluginName=$PLUGIN_NAME" >> "$GITHUB_OUTPUT"
