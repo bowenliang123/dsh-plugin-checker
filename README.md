@@ -2,11 +2,11 @@
 
 A GitHub Action that checks the correctness of a [DeepSeek Harness](https://www.deepseek.com/harness/) (dsh) plugin.
 
-It does the following steps:
+It checks the plugin in the following order, cheapest first:
 
-1. Prepare Node.js, pnpm, and the `@deepseek-ai/dsh` CLI.
-2. Run `dsh plugin --profile web add` to install the plugin from your repository.
-3. Fail the check if `dsh` cannot install it (e.g. missing/invalid `package.json`, failed pnpm install).
+1. **Check the manifest** — `package.json` exists, is valid JSON, declares a `name`, declares `dsh.bundle.patch`, and the referenced patch file exists. A package without `dsh.bundle` is not a dsh plugin.
+2. **Install with dsh** — runs `dsh plugin --profile web add`; fails if `dsh` cannot install it (e.g. failed pnpm install).
+3. **Verify the layer applies** — runs `dsh --profile web --dump-config` and fails if the plugin does not appear as a bundle layer (`# == <name>`) in the composed config.
 
 ## Usage
 
@@ -51,8 +51,9 @@ This checks the repository root. To check a plugin that lives in a subdirectory,
 ## How it works
 
 1. Sets up Node.js and installs pnpm and the `@deepseek-ai/dsh` CLI (`npm install @deepseek-ai/dsh`) from npm.
-2. Runs `dsh plugin --profile <profile> add <rootPath>` to install the plugin into a fresh dsh profile under the runner home.
-3. Verifies the plugin's package name appears in the profile's `dsh.profile.bundles` layer list and that its `dsh.bundle.patch` file exists.
+2. Checks the plugin's `package.json` manifest statically (valid JSON, `name`, `dsh.bundle.patch` declared, patch file exists).
+3. Runs `dsh plugin --profile <profile> add <rootPath>` to install the plugin into a fresh dsh profile under the runner home.
+4. Runs `dsh --profile <profile> --dump-config` and verifies the plugin shows up as a bundle layer (`# == <name>`), confirming the patch actually loads.
 
 A plugin `package.json` looks like:
 
