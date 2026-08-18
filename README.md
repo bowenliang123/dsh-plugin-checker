@@ -1,13 +1,8 @@
 # DeepSeek Harness Plugin Checker - GitHub Action
 
-A GitHub Action that checks the correctness of a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh) plugin.
+A GitHub Action that checks the correctness of a [DeepSeek Harness](https://www.deepseek.com/harness/) (dsh) plugin.
 
-It installs the `@deepseek-ai/dsh` CLI from npm and runs `dsh plugin --profile web add` against the plugin in your repository. The check fails when:
-
-- the plugin directory is not an npm package (missing or invalid `package.json`),
-- `dsh` cannot install the plugin (the pnpm install inside the dsh profile fails), or
-- the plugin installs but is not registered as a **profile bundle layer** — a real dsh plugin declares `dsh.bundle.patch` in its `package.json`; anything else is installed as a plain dependency with a warning and is not a plugin,
-- the file referenced by `dsh.bundle.patch` does not exist.
+It installs the `@deepseek-ai/dsh` CLI from npm and runs `dsh plugin --profile web add` against the plugin in your repository. The check fails when `dsh` cannot install the plugin (e.g. a missing or invalid `package.json`, or a failed pnpm install inside the dsh profile).
 
 ## Usage
 
