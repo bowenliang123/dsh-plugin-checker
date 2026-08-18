@@ -1,5 +1,5 @@
 name: 'DSH Plugin Checker'
-description: 'Check that a DeepSeek Harness (dsh) plugin is correct by installing it with the dsh CLI and verifying it registers as a profile bundle layer.'
+description: 'GitHub Action for checking the correctness of DeepSeek Harness (dsh) plugin.'
 author: 'bowenliang123'
 branding:
   icon: 'package'
