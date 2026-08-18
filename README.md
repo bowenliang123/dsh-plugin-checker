@@ -83,4 +83,4 @@ A plugin `package.json` looks like:
 
 ## License
 
-MIT
+Apache License 2.0
