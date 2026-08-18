@@ -25,9 +25,6 @@ inputs:
     description: 'Node.js version to run the dsh CLI with.'
     required: false
     default: '24'
-outputs:
-  pluginName:
-    description: 'The package name of the checked plugin.'
 runs:
   using: 'composite'
   steps:
@@ -45,10 +42,7 @@ runs:
       run: npm install --global "@deepseek-ai/dsh@${{ inputs.dshVersion }}"
 
     - name: Install plugin with DeepSeek Harness CLI
-      id: check
       shell: bash
       run: |
         set -euo pipefail
         dsh plugin --profile "${{ inputs.profile }}" add "./${{ inputs.rootPath }}"
-        PLUGIN_PATH="./${{ inputs.rootPath }}/package.json"
-        echo "pluginName=$(node -p 'require(process.argv[1]).name' "$PLUGIN_PATH")" >> "$GITHUB_OUTPUT"

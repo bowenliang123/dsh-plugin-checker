@@ -48,12 +48,6 @@ This checks the repository root. To check a plugin that lives in a subdirectory,
 | `pnpmVersion`  | Version of pnpm to install (`dsh` plugin management runs pnpm internally).         | No       | `latest`   |
 | `nodeVersion`  | Node.js version to run the dsh CLI with.                                           | No       | `24`       |
 
-## Outputs
-
-| Output       | Description                        |
-| ------------ | ---------------------------------- |
-| `pluginName` | The package name of the checked plugin. |
-
 ## How it works
 
 1. Sets up Node.js and installs pnpm and the `@deepseek-ai/dsh` CLI (`npm install @deepseek-ai/dsh`) from npm.
