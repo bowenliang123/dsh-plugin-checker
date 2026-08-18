@@ -38,8 +38,3 @@ jobs:
           if ! gh release create "${TAG}" --title "${TAG}" --generate-notes --verify-tag; then
             gh release edit "${TAG}" --title "${TAG}" --notes "Release ${TAG}"
           fi
-
-          echo "Publishing release ${MAJOR}"
-          if ! gh release create "${MAJOR}" --title "${MAJOR}" --notes "Latest ${MAJOR} release — see ${TAG}" --verify-tag; then
-            gh release edit "${MAJOR}" --title "${MAJOR}" --notes "Latest ${MAJOR} release — see ${TAG}"
-          fi
