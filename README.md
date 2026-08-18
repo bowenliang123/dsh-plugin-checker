@@ -2,7 +2,11 @@
 
 A GitHub Action that checks the correctness of a [DeepSeek Harness](https://www.deepseek.com/harness/) (dsh) plugin.
 
-It installs the `@deepseek-ai/dsh` CLI from npm and runs `dsh plugin --profile web add` against the plugin in your repository. The check fails when `dsh` cannot install the plugin (e.g. a missing or invalid `package.json`, or a failed pnpm install inside the dsh profile).
+It does the following steps:
+
+1. Prepare Node.js, pnpm, and the `@deepseek-ai/dsh` CLI.
+2. Run `dsh plugin --profile web add` to install the plugin from your repository.
+3. Fail the check if `dsh` cannot install it (e.g. missing/invalid `package.json`, failed pnpm install).
 
 ## Usage
 
@@ -21,14 +25,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Check the dsh plugin
+      - name: Check the DSH plugin
         uses: bowenliang123/dsh-plugin-checker@v1
 ```
 
 This checks the repository root. To check a plugin that lives in a subdirectory, pass `rootPath`:
 
 ```yaml
-      - name: Check the dsh plugin
+      - name: Check the DSH plugin
         uses: bowenliang123/dsh-plugin-checker@v1
         with:
           rootPath: plugins/my-plugin
@@ -76,34 +80,6 @@ A plugin `package.json` looks like:
 
 - `examples/hello-plugin` — a minimal valid plugin that passes the check.
 - `examples/broken-plugin` — a directory without a `package.json` that must fail the check.
-
-## Versioning
-
-Consumers pin the action to a **major version tag**, so they keep receiving fixes
-without touching their workflow:
-
-```yaml
-- uses: bowenliang123/dsh-plugin-checker@v1
-```
-
-`v1` is a floating tag that always points to the newest `v1.x.y` commit.
-Maintainers release a new version by tagging and pushing it:
-
-```sh
-git tag v1.2.3
-git push origin v1.2.3
-```
-
-The [release workflow](.github/workflows/release.yml) then:
-
-1. moves the `v1` tag to the same commit,
-2. publishes a GitHub Release for `v1.2.3` with auto-generated notes,
-3. publishes (or updates) the `v1` GitHub Release.
-
-Existing workflows keep using `@v1` unchanged — they resolve to the new commit on
-their next run. Breaking changes bump the major version (`v2`, `v3`, …); the same
-workflow handles any `vN.x.y` tag and moves the matching `vN` tag. Pre-release
-tags such as `v1.2.3-rc.1` are ignored.
 
 ## License
 
