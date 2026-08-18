@@ -41,8 +41,52 @@ runs:
       shell: bash
       run: npm install --global "@deepseek-ai/dsh@${{ inputs.dshVersion }}"
 
-    - name: Install plugin with DeepSeek Harness CLI
+    - name: Check plugin manifest
       shell: bash
       run: |
         set -euo pipefail
-        dsh plugin --profile "${{ inputs.profile }}" add "./${{ inputs.rootPath }}"
+        node -e '
+          const fs = require("node:fs")
+          const root = process.argv[1]
+          const manifestPath = `${root}/package.json`
+          if (!fs.existsSync(manifestPath)) {
+            console.error(`no package.json at ${root} — a dsh plugin must be an npm package`)
+            process.exit(1)
+          }
+          let manifest
+          try {
+            manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"))
+          } catch (error) {
+            console.error(`invalid package.json at ${manifestPath}: ${error.message}`)
+            process.exit(1)
+          }
+          if (typeof manifest.name !== "string" || manifest.name.length === 0) {
+            console.error(`package.json must declare a non-empty "name"`)
+            process.exit(1)
+          }
+          const patch = manifest.dsh?.bundle?.patch
+          if (!patch) {
+            console.error(`${manifest.name} is not a dsh plugin — a bundle must declare "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }`)
+            process.exit(1)
+          }
+          if (!fs.existsSync(`${root}/${patch}`)) {
+            console.error(`dsh.bundle.patch references ${patch}, which does not exist under ${root}`)
+            process.exit(1)
+          }
+          console.log(`manifest OK: ${manifest.name} (patch: ${patch})`)
+        ' "./${{ inputs.rootPath }}"
+
+    - name: Install plugin with dsh
+      shell: bash
+      run: dsh plugin --profile "${{ inputs.profile }}" add "./${{ inputs.rootPath }}"
+
+    - name: Verify plugin layer applies
+      shell: bash
+      run: |
+        set -euo pipefail
+        PLUGIN_NAME="$(node -p 'require(process.argv[1]).name' "./${{ inputs.rootPath }}/package.json")"
+        dsh --profile "${{ inputs.profile }}" --dump-config | grep -qF "# == ${PLUGIN_NAME}" || {
+          echo "::error::plugin ${PLUGIN_NAME} did not appear as a bundle layer of profile \"${{ inputs.profile }}\""
+          exit 1
+        }
+        echo "plugin ${PLUGIN_NAME} loaded as a bundle layer of profile \"${{ inputs.profile }}\""
