@@ -1,6 +1,4 @@
-# DSH Plugin Checker
-
-[![ci](https://github.com/bowenliang123/dsh-plugin-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/bowenliang123/dsh-plugin-checker/actions/workflows/ci.yml)
+# DeepSeek Harness Plugin Checker - GitHub Action
 
 A GitHub Action that checks the correctness of a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh) plugin.
 
