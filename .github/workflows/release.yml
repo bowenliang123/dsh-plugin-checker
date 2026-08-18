@@ -1,0 +1,45 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Move major tag and publish releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          TAG="${GITHUB_REF_NAME}"
+          MAJOR="v${TAG#v}"
+          MAJOR="${MAJOR%%.*}"
+
+          if [[ "${TAG}" == *-* ]]; then
+            echo "Skipping prerelease tag ${TAG}"
+            exit 0
+          fi
+
+          echo "Moving ${MAJOR} tag to ${TAG} (${GITHUB_SHA})"
+          git tag -f "${MAJOR}" "${GITHUB_SHA}"
+          git push --force origin "refs/tags/${MAJOR}"
+
+          echo "Publishing release ${TAG}"
+          if ! gh release create "${TAG}" --title "${TAG}" --generate-notes --verify-tag; then
+            gh release edit "${TAG}" --title "${TAG}" --notes "Release ${TAG}"
+          fi
+
+          echo "Publishing release ${MAJOR}"
+          if ! gh release create "${MAJOR}" --title "${MAJOR}" --notes "Latest ${MAJOR} release — see ${TAG}" --verify-tag; then
+            gh release edit "${MAJOR}" --title "${MAJOR}" --notes "Latest ${MAJOR} release — see ${TAG}"
+          fi

@@ -84,6 +84,34 @@ A plugin `package.json` looks like:
 - `examples/hello-plugin` — a minimal valid plugin that passes the check.
 - `examples/broken-plugin` — a directory without a `package.json` that must fail the check.
 
+## Versioning
+
+Consumers pin the action to a **major version tag**, so they keep receiving fixes
+without touching their workflow:
+
+```yaml
+- uses: bowenliang123/dsh-plugin-checker@v1
+```
+
+`v1` is a floating tag that always points to the newest `v1.x.y` commit.
+Maintainers release a new version by tagging and pushing it:
+
+```sh
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+The [release workflow](.github/workflows/release.yml) then:
+
+1. moves the `v1` tag to the same commit,
+2. publishes a GitHub Release for `v1.2.3` with auto-generated notes,
+3. publishes (or updates) the `v1` GitHub Release.
+
+Existing workflows keep using `@v1` unchanged — they resolve to the new commit on
+their next run. Breaking changes bump the major version (`v2`, `v3`, …); the same
+workflow handles any `vN.x.y` tag and moves the matching `vN` tag. Pre-release
+tags such as `v1.2.3-rc.1` are ignored.
+
 ## License
 
 MIT
