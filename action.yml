@@ -41,40 +41,36 @@ runs:
       shell: bash
       run: npm install --global "@deepseek-ai/dsh@${{ inputs.dshVersion }}"
 
-    - name: Check plugin manifest
+    - name: Check package.json exists
       shell: bash
       run: |
         set -euo pipefail
-        node -e '
-          const fs = require("node:fs")
-          const root = process.argv[1]
-          const manifestPath = `${root}/package.json`
-          if (!fs.existsSync(manifestPath)) {
-            console.error(`no package.json at ${root} — a dsh plugin must be an npm package`)
-            process.exit(1)
-          }
-          let manifest
-          try {
-            manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"))
-          } catch (error) {
-            console.error(`invalid package.json at ${manifestPath}: ${error.message}`)
-            process.exit(1)
-          }
-          if (typeof manifest.name !== "string" || manifest.name.length === 0) {
-            console.error(`package.json must declare a non-empty "name"`)
-            process.exit(1)
-          }
-          const patch = manifest.dsh?.bundle?.patch
-          if (!patch) {
-            console.error(`${manifest.name} is not a dsh plugin — a bundle must declare "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }`)
-            process.exit(1)
-          }
-          if (!fs.existsSync(`${root}/${patch}`)) {
-            console.error(`dsh.bundle.patch references ${patch}, which does not exist under ${root}`)
-            process.exit(1)
-          }
-          console.log(`manifest OK: ${manifest.name} (patch: ${patch})`)
-        ' "./${{ inputs.rootPath }}"
+        test -f "./${{ inputs.rootPath }}/package.json" || { echo "::error::no package.json at ${{ inputs.rootPath }}"; exit 1; }
+
+    - name: Check package.json is valid JSON
+      shell: bash
+      run: |
+        set -euo pipefail
+        jq -e . "./${{ inputs.rootPath }}/package.json" >/dev/null || { echo "::error::invalid JSON in ${{ inputs.rootPath }}/package.json"; exit 1; }
+
+    - name: Check plugin name is declared
+      shell: bash
+      run: |
+        set -euo pipefail
+        jq -e '.name | type == "string" and length > 0' "./${{ inputs.rootPath }}/package.json" >/dev/null || { echo "::error::package.json must declare a non-empty \"name\""; exit 1; }
+
+    - name: Check dsh.bundle.patch is declared
+      shell: bash
+      run: |
+        set -euo pipefail
+        jq -e '.dsh.bundle.patch | type == "string" and length > 0' "./${{ inputs.rootPath }}/package.json" >/dev/null || { echo "::error::not a dsh plugin — declare \"dsh\": { \"bundle\": { \"patch\": \"./cordis.patch.yml\" } }"; exit 1; }
+
+    - name: Check the patch file exists
+      shell: bash
+      run: |
+        set -euo pipefail
+        PATCH="$(jq -r '.dsh.bundle.patch' "./${{ inputs.rootPath }}/package.json")"
+        test -f "./${{ inputs.rootPath }}/$PATCH" || { echo "::error::dsh.bundle.patch references $PATCH, which does not exist under ${{ inputs.rootPath }}"; exit 1; }
 
     - name: Install plugin with dsh
       shell: bash
@@ -84,7 +80,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        PLUGIN_NAME="$(node -p 'require(process.argv[1]).name' "./${{ inputs.rootPath }}/package.json")"
+        PLUGIN_NAME="$(jq -r '.name' "./${{ inputs.rootPath }}/package.json")"
         dsh --profile "${{ inputs.profile }}" --dump-config | grep -qF "# == ${PLUGIN_NAME}" || {
           echo "::error::plugin ${PLUGIN_NAME} did not appear as a bundle layer of profile \"${{ inputs.profile }}\""
           exit 1
