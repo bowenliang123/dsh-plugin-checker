@@ -49,14 +49,6 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-
-        ROOT_PATH="${{ inputs.rootPath }}"
-        case "$ROOT_PATH" in
-          /*) ;;
-          *) ROOT_PATH="${GITHUB_WORKSPACE:-$PWD}/$ROOT_PATH" ;;
-        esac
-
-        dsh plugin --profile "${{ inputs.profile }}" add "$ROOT_PATH"
-
-        PLUGIN_NAME="$(node -p 'require(process.argv[1]).name' "$ROOT_PATH/package.json")"
-        echo "pluginName=$PLUGIN_NAME" >> "$GITHUB_OUTPUT"
+        dsh plugin --profile "${{ inputs.profile }}" add "./${{ inputs.rootPath }}"
+        PLUGIN_PATH="./${{ inputs.rootPath }}/package.json"
+        echo "pluginName=$(node -p 'require(process.argv[1]).name' "$PLUGIN_PATH")" >> "$GITHUB_OUTPUT"
